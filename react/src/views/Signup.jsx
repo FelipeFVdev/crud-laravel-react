@@ -1,21 +1,22 @@
 // import React from 'react'
 
-import { useRef } from "react";
-import { Link } from "react-router-dom";
-import axiosClient from "../axios-cliente";
-import { useStateContext } from "../contexts/ContextProvider";
+import {Link} from "react-router-dom";
+import {createRef, useState} from "react";
+import axiosClient from "../axios-client.js";
+import {useStateContext} from "../contexts/ContextProvider.jsx";
 
 export function Signup() {
 
-  const nameRef = useRef();
-  const emailRef = useRef();
-  const passwordRef = useRef();
-  const passwordConfirmationRef = useRef();
-
+  const nameRef = createRef()
+  const emailRef = createRef()
+  const passwordRef = createRef()
+  const passwordConfirmationRef = createRef()
   const {setUser, setToken} = useStateContext()
+  const [errors, setErrors] = useState(null)
 
   const onSubmit = (e) => {
     e.preventDefault()
+
     const payload = {
       name: nameRef.current.value,
       email: emailRef.current.value,
@@ -24,14 +25,14 @@ export function Signup() {
     }
 
     axiosClient.post('/signup', payload)
-      .then((data) =>{
+      .then(({data}) =>{
         setUser(data.user)
         setToken(data.token)
       })
       .catch(err => {
         const response = err.response
         if(response && response.status === 422) {
-          console.log(response.data.errors);
+          setErrors(response.data.errors);
         }
       })
   }
@@ -43,6 +44,14 @@ export function Signup() {
                 <h1 className="title">
                     Singup for Free
                 </h1>
+                {errors && 
+                <div className="alert">
+                  {Object.keys(errors).map(key => (
+                    <p key={key}>{errors[key][0]}</p>
+                  ))}
+                </div>
+
+                }
                 <input ref={nameRef} type="text" placeholder="Full Name" />
                 <input ref={emailRef} type="email" placeholder="Email" />
                 <input ref={passwordRef} type="password" placeholder="Password" />
