@@ -2,43 +2,54 @@
 
 import { Link, Navigate, Outlet } from "react-router-dom";
 import { useStateContext } from "../contexts/ContextProvider";
+import { useEffect } from "react";
+import axiosClient from "../axios-client.js";
 
 export default function DefaultLayout() {
+    const { user, token, setUser, setToken } = useStateContext();
 
-  const {user, token} = useStateContext()
+    useEffect(() => {
+        axiosClient.get("/user").then(({ data }) => {
+            setUser(data);
+        });
+    }, []);
 
-  if(!token) {
-    return <Navigate to="/login" />
-  }
+    if (!token) {
+        return <Navigate to="/login" />;
+    }
 
-  const onLogout = (event) => {
-    event.preventDefault()
-  }
+    const onLogout = (event) => {
+        event.preventDefault();
 
-  return (
-    <div id="defaultLayout">
-      <aside>
-        <Link to="/dashboard">Dashboard</Link>
-        <Link to="/users">Users</Link>
-      </aside>
+        axiosClient.post("/logout").then(() => {
+            setUser({});
+            setToken(null);
+        });
+    };
 
-      <div className="content">
-        <header>
-          <div>
-            Header
-          </div>
+    return (
+        <div id="defaultLayout">
+            <aside>
+                <Link to="/dashboard">Dashboard</Link>
+                <Link to="/users">Users</Link>
+            </aside>
 
-          <div>
-            {user.name}
-            <a href="#" onClick={onLogout} className="btn-logout">Logout</a>
-          </div>
-        </header>
+            <div className="content">
+                <header>
+                    <div>Header</div>
 
-        <main>
-          <Outlet />
-        </main>
+                    <div>
+                        {user.name}
+                        <a href="#" onClick={onLogout} className="btn-logout">
+                            Logout
+                        </a>
+                    </div>
+                </header>
 
-      </div>
-    </div>
-  )
+                <main>
+                    <Outlet />
+                </main>
+            </div>
+        </div>
+    );
 }
